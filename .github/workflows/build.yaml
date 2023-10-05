@@ -19,10 +19,11 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v3
+      with:
+        path: go/src/github.com/container-storage-interface/spec
 
     - name: Build Test
       run: |
+        export GOPATH=${{ github.workspace }}/go
+        cd go/src/github.com/container-storage-interface/spec
         make
-        make -C lib/go protoc
-        make -C lib/go protoc-gen-go
-        make build_go

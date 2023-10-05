@@ -4,7 +4,6 @@ CSI_SPEC := spec.md
 CSI_PROTO := csi.proto
 ## Build go language bindings
 CSI_A := csi.a
-CSI_GO := lib/go/csi/csi.pb.go
 CSI_PKG := lib/go/csi
 
 # This is the target for building the temporary CSI protobuf file.
@@ -31,23 +30,15 @@ else
 	diff "$@" "$?" > /dev/null 2>&1 || cp -f "$?" "$@"
 endif
 
-build: check
-
-# If this is not running on GitHub Actions then for sake of convenience
-# go ahead and update the language bindings as well.
-ifneq (true,$(GITHUB_ACTIONS))
-build: build_cpp build_go
-endif
-
+build: check build_cpp build_go
 
 build_cpp:
 	$(MAKE) -C lib/cxx
 
-# The file exists, but could be out-of-date.
-$(CSI_GO): $(CSI_PROTO)
-	$(MAKE) -C lib/go csi/csi.pb.go
+csi_go:
+	$(MAKE) -C lib/go
 
-$(CSI_A): $(CSI_GO)
+$(CSI_A): csi_go
 	go mod download
 	go install ./$(CSI_PKG)
 	go build -o "$@" ./$(CSI_PKG)
@@ -66,4 +57,4 @@ clobber: clean
 check: $(CSI_PROTO)
 	awk '{ if (length > 72) print NR, $$0 }' $? | diff - /dev/null
 
-.PHONY: clean clobber check
+.PHONY: clean clobber check csi_go build_go build_cpp
